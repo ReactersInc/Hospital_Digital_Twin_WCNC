@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """
-hospital_server.py
-Enhanced with timestamped logs for Mininet usage.
+hospital_server.py (instrumented + local metrics logging)
+
+- Adds local_round, local_train_time, model_delta_norm to summaries forwarded to aggregator.
+- Captures CPU %, NIC drops, TCP retransmits per Mininet host.
+- Logs all metrics locally in CSV (timestamped) for later DDoS/FL analysis.
 """
-import argparse, json, time, threading, urllib.request, urllib.parse, http.server, socketserver, math
+import argparse, json, time, threading, urllib.request, http.server, socketserver, math, csv, os
 from collections import defaultdict, deque
+import statistics
+import psutil
+import re
 
 def log(msg):
-    """Print timestamped log, flushed immediately for Mininet."""
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
 
 class HospitalHandler(http.server.BaseHTTPRequestHandler):
@@ -31,29 +36,40 @@ class HospitalHandler(http.server.BaseHTTPRequestHandler):
         body = self.rfile.read(length)
         try:
             data = json.loads(body.decode())
-        except Exception as e:
+        except Exception:
             self._set_resp(400)
             self.wfile.write(b'{"error":"bad json"}')
             return
+        data['_received_at'] = time.time()
         self.server.enqueue(data)
         self._set_resp(200)
         self.wfile.write(b'{"status":"ok"}')
 
     def log_message(self, format, *args):
-        # silence default HTTP logs
-        return
+        return  # silence default logs
 
 class HospitalServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
-    def __init__(self, server_address, RequestHandlerClass, batch, forward_url):
+    def __init__(self, server_address, RequestHandlerClass, batch, forward_url, csv_file):
         super().__init__(server_address, RequestHandlerClass)
         self.queue = deque()
         self.lock = threading.Lock()
         self.batch = batch
         self.forward_url = forward_url
+        self.local_round = 0
         self.stats = defaultdict(lambda: {"count":0, "mean":0.0, "M2":0.0})
+        self.csv_file = csv_file
+
+        # initialize CSV file with headers
+        if not os.path.isfile(csv_file):
+            with open(csv_file, 'w', newline='') as f:
+                writer = csv.writer(f)
+                headers = ["timestamp","local_round","n_records_in_batch","local_train_time",
+                           "model_delta_norm","total_records_seen","cpu_percent",
+                           "rx_drop","tx_drop","rx_bytes","tx_bytes","tcp_retrans_segs"]
+                writer.writerow(headers)
 
     def enqueue(self, data):
         with self.lock:
@@ -61,8 +77,48 @@ class HospitalServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
     def process_loop(self):
         while True:
-            self._maybe_process()
+            try:
+                self._maybe_process()
+            except Exception as e:
+                log(f"[Hospital] processing ERR: {e}")
             time.sleep(0.5)
+
+    def _collect_host_metrics(self):
+        metrics = {}
+        # CPU %
+        metrics['cpu_percent'] = psutil.cpu_percent(interval=None)
+        # NIC stats (eth0)
+        try:
+            with open('/proc/net/dev','r') as f:
+                lines = f.readlines()
+            for line in lines[2:]:
+                if 'eth0' in line:
+                    parts = re.split(r'[:\s]+', line.strip())
+                    metrics['rx_bytes'] = int(parts[1])
+                    metrics['rx_drop'] = int(parts[4])
+                    metrics['tx_bytes'] = int(parts[9])
+                    metrics['tx_drop'] = int(parts[12])
+                    break
+        except Exception as e:
+            metrics['nic_err'] = str(e)
+        # TCP retransmits
+        try:
+            with open('/proc/net/snmp','r') as f:
+                lines = f.readlines()
+            tcp_line = None
+            tcp_vals = None
+            for i in range(len(lines)):
+                if lines[i].startswith('Tcp:') and i+1 < len(lines):
+                    tcp_line = lines[i].strip().split()
+                    tcp_vals = lines[i+1].strip().split()
+                    if tcp_line[0] == 'Tcp:':
+                        break
+            if tcp_line and tcp_vals:
+                tcp_dict = dict(zip(tcp_line[1:], map(int, tcp_vals[1:])))
+                metrics['tcp_retrans_segs'] = tcp_dict.get('RetransSegs',0)
+        except Exception as e:
+            metrics['tcp_err'] = str(e)
+        return metrics
 
     def _maybe_process(self):
         items = []
@@ -71,60 +127,93 @@ class HospitalServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
                 items.append(self.queue.popleft())
         if not items:
             return
+
+        t0 = time.time()
+        per_vital_acc = defaultdict(list)
         for item in items:
-            vitals = item.get('vitals', {})
-            for k, v in vitals.items():
+            vitals = item.get('vitals',{})
+            for k,v in vitals.items():
+                per_vital_acc[k].append(float(v))
                 s = self.stats[k]
                 s['count'] += 1
                 delta = v - s['mean']
                 s['mean'] += delta / s['count']
                 delta2 = v - s['mean']
                 s['M2'] += delta * delta2
-        summary = {
+        simulated_compute = 0.01*len(items)
+        time.sleep(simulated_compute)
+        local_train_time = time.time() - t0
+
+        batch_means = {k: (statistics.mean(vals) if vals else 0.0) for k, vals in per_vital_acc.items()}
+        vec = [v for _,v in sorted(batch_means.items())]
+        delta_norm = math.sqrt(sum(x*x for x in vec)) if vec else 0.0
+
+        self.local_round += 1
+        local_round = self.local_round
+
+        host_metrics = self._collect_host_metrics()
+
+        # Log locally to CSV
+        with open(self.csv_file,'a',newline='') as f:
+            writer = csv.writer(f)
+            row = [
+                time.time(),
+                local_round,
+                len(items),
+                round(local_train_time,4),
+                round(delta_norm,6),
+                sum(self.stats[k]['count'] for k in self.stats),
+                host_metrics.get('cpu_percent',0.0),
+                host_metrics.get('rx_drop',0),
+                host_metrics.get('tx_drop',0),
+                host_metrics.get('rx_bytes',0),
+                host_metrics.get('tx_bytes',0),
+                host_metrics.get('tcp_retrans_segs',0)
+            ]
+            writer.writerow(row)
+
+        # Optional log for terminal
+        log(f"[Hospital] round={local_round} batch={len(items)} train_time={local_train_time:.3f}s delta_norm={delta_norm:.6f} cpu={host_metrics.get('cpu_percent',0.0)} rx_drop={host_metrics.get('rx_drop',0)} tx_drop={host_metrics.get('tx_drop',0)} tcp_retrans={host_metrics.get('tcp_retrans_segs',0)}")
+
+        # Forward summary to aggregator (optional, can comment out)
+        self._forward_summary({
             "timestamp": time.time(),
-            "n_records": sum(self.stats[k]['count'] for k in self.stats),
-            "per_vital": {}
-        }
-        for k, s in self.stats.items():
-            count = s['count']
-            mean = s['mean']
-            variance = (s['M2'] / (count - 1)) if count > 1 else 0.0
-            stddev = math.sqrt(variance) if variance > 0 else 0.0
-            risk = 0.0
-            if k == 'heart_rate' and mean > 110:
-                risk += 0.7
-            if k == 'spo2' and mean < 92:
-                risk += 0.9
-            risk += min(1.0, abs(mean)/200.0)
-            summary['per_vital'][k] = {"count": count, "mean": round(mean,3), "std": round(stddev,3), "partial_risk": round(risk,3)}
-        self._forward_summary(summary)
+            "local_round": local_round,
+            "n_records_in_batch": len(items),
+            "local_train_time": round(local_train_time,4),
+            "model_delta_norm": round(delta_norm,6),
+            "per_vital_batch_means": {k: round(v,4) for k,v in batch_means.items()},
+            "total_records_seen": sum(self.stats[k]['count'] for k in self.stats)
+        })
 
     def _forward_summary(self, summary):
         body = json.dumps(summary).encode('utf-8')
-        req = urllib.request.Request(self.forward_url, data=body, headers={'Content-Type': 'application/json'})
+        req = urllib.request.Request(self.forward_url, data=body, headers={'Content-Type':'application/json'})
         try:
-            with urllib.request.urlopen(req, timeout=5) as resp:
+            with urllib.request.urlopen(req,timeout=5) as resp:
                 resp_body = resp.read().decode()
-                log(f"[Hospital] forwarded summary n_records={summary['n_records']} resp={resp_body}")
+                log(f"[Hospital] forwarded summary local_round={summary['local_round']} resp={resp_body}")
         except Exception as e:
             log(f"[Hospital] forward ERR: {e}")
 
-def run_server(port, batch, agg_host, agg_port):
+def run_server(port,batch,agg_host,agg_port,csv_file):
     forward_url = f"http://{agg_host}:{agg_port}/summary"
-    server = HospitalServer(('0.0.0.0', port), HospitalHandler, batch=batch, forward_url=forward_url)
-    log(f"[Hospital] listening on {port}, forwarding summaries to {forward_url}, batch={batch}")
-    t = threading.Thread(target=server.process_loop, daemon=True)
+    server = HospitalServer(('0.0.0.0',port), HospitalHandler, batch, forward_url, csv_file)
+    log(f"[Hospital] listening on {port}, batch={batch}, logging to {csv_file}")
+    t = threading.Thread(target=server.process_loop,daemon=True)
     t.start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         log("Hospital shutting down")
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--port', type=int, default=8000)
-    parser.add_argument('--agg_host', required=True)
-    parser.add_argument('--agg_port', type=int, default=9000)
-    parser.add_argument('--batch', type=int, default=10)
-    args = parser.parse_args()
-    run_server(args.port, args.batch, args.agg_host, args.agg_port)
+if __name__=='__main__':
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument('--port', type=int, default=8000)
+    p.add_argument('--agg_host', required=True)
+    p.add_argument('--agg_port', type=int, default=9000)
+    p.add_argument('--batch', type=int, default=10)
+    p.add_argument('--csv_file', type=str, default="hospital_metrics.csv")
+    args = p.parse_args()
+    run_server(args.port,args.batch,args.agg_host,args.agg_port,args.csv_file)

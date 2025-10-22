@@ -11,3 +11,7 @@ h3.log
 h3icu1.log
 h3icu2.log
 h3icu3.log
+hospital_metrics.csv
+rounds_summary.csv
+h2_iperf.log
+h2att_iperf.log
