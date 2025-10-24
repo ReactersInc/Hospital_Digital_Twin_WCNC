@@ -15,3 +15,4 @@ hospital_metrics.csv
 rounds_summary.csv
 h2_iperf.log
 h2att_iperf.log
+__pycache__
