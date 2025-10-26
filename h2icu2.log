@@ -1,0 +1,11 @@
+[17:03:52] [ICU h2icu2] sending to http://10.0.2.1:8002/ingest every 3.0s
+[17:03:52] [ICU h2icu2] seq=0 sent_success=1 loss_rate=0.000 jitter=0.0ms retrans_delta=0 rtt=60.602ms
+[17:03:55] [ICU h2icu2] seq=1 sent_success=1 loss_rate=0.000 jitter=1.139ms retrans_delta=0 rtt=42.375ms
+[17:03:58] [ICU h2icu2] seq=2 sent_success=1 loss_rate=0.000 jitter=1.123ms retrans_delta=0 rtt=43.257ms
+[17:04:01] [ICU h2icu2] seq=3 sent_success=1 loss_rate=0.000 jitter=1.135ms retrans_delta=0 rtt=44.567ms
+[17:04:04] [ICU h2icu2] seq=4 sent_success=1 loss_rate=0.000 jitter=1.091ms retrans_delta=0 rtt=44.135ms
+[17:04:07] [ICU h2icu2] seq=5 sent_success=1 loss_rate=0.000 jitter=1.093ms retrans_delta=0 rtt=43.011ms
+[17:04:10] [ICU h2icu2] seq=6 sent_success=1 loss_rate=0.000 jitter=1.514ms retrans_delta=0 rtt=50.837ms
+[17:04:13] [ICU h2icu2] seq=7 sent_success=1 loss_rate=0.000 jitter=1.737ms retrans_delta=0 rtt=45.752ms
+[17:04:16] [ICU h2icu2] seq=8 sent_success=1 loss_rate=0.000 jitter=1.882ms retrans_delta=0 rtt=41.693ms
+[17:04:20] [ICU h2icu2] seq=9 sent_success=1 loss_rate=0.000 jitter=1.794ms retrans_delta=0 rtt=42.175ms

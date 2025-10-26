@@ -1,0 +1,47 @@
+[17:03:51] [Hospital:h2] listening on 8002, batch=5, logging to hospital_metrics.csv (ddos -> ddos_metrics_h2.csv, alerts -> ddos_alerts_h2.csv)
+[17:03:52] [Hospital:h2] round=1 batch=3 train_time=0.031s delta_norm=195.386839 cpu=99.6 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:03:52] [Hospital:h2] forwarded summary local_round=1 resp={"status":"ok"}
+[17:03:54] [Hospital:h2] round=2 batch=1 train_time=0.010s delta_norm=193.491303 cpu=68.9 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:03:54] [Hospital:h2] forwarded summary local_round=2 resp={"status":"ok"}
+[17:03:55] [Hospital:h2] round=3 batch=1 train_time=0.010s delta_norm=195.176356 cpu=35.7 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:03:55] [Hospital:h2] forwarded summary local_round=3 resp={"status":"ok"}
+[17:03:56] [DDoS:h2] ALERT -> dominant=10.0.2.1 shares={'10.0.2.11': 0.19, '10.0.2.1': 0.492, '10.0.2.254': 0.222, '10.0.2.12': 0.095}
+[17:03:56] [Hospital:h2] round=4 batch=2 train_time=0.020s delta_norm=195.224110 cpu=28.2 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:03:56] [Hospital:h2] forwarded summary local_round=4 resp={"status":"ok"}
+[17:03:59] [Hospital:h2] round=5 batch=2 train_time=0.020s delta_norm=198.224290 cpu=28.5 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:03:59] [Hospital:h2] forwarded summary local_round=5 resp={"status":"ok"}
+[17:04:01] [Hospital:h2] round=6 batch=2 train_time=0.020s delta_norm=192.944709 cpu=14.2 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:01] [Hospital:h2] forwarded summary local_round=6 resp={"status":"ok"}
+[17:04:01] [DDoS:h2] ALERT -> dominant=10.0.2.1 shares={'10.0.2.13': 0.103, '10.0.2.1': 0.5, '10.0.2.254': 0.241, '10.0.2.11': 0.103, '10.0.2.12': 0.052}
+[17:04:02] [Hospital:h2] round=7 batch=1 train_time=0.010s delta_norm=183.584265 cpu=26.2 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:02] [Hospital:h2] forwarded summary local_round=7 resp={"status":"ok"}
+[17:04:03] [Hospital:h2] round=8 batch=1 train_time=0.010s delta_norm=190.525595 cpu=40.0 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:03] [Hospital:h2] forwarded summary local_round=8 resp={"status":"ok"}
+[17:04:05] [Hospital:h2] round=9 batch=3 train_time=0.030s delta_norm=193.887392 cpu=15.4 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:05] [Hospital:h2] forwarded summary local_round=9 resp={"status":"ok"}
+[17:04:06] [DDoS:h2] ALERT -> dominant=10.0.2.1 shares={'10.0.2.12': 0.103, '10.0.2.1': 0.5, '10.0.2.254': 0.241, '10.0.2.11': 0.103, '10.0.2.13': 0.052}
+[17:04:07] [Hospital:h2] round=10 batch=1 train_time=0.013s delta_norm=194.154964 cpu=14.2 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:07] [Hospital:h2] forwarded summary local_round=10 resp={"status":"ok"}
+[17:04:08] [Hospital:h2] round=11 batch=1 train_time=0.010s delta_norm=192.994720 cpu=38.1 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:08] [Hospital:h2] forwarded summary local_round=11 resp={"status":"ok"}
+[17:04:09] [Hospital:h2] round=12 batch=2 train_time=0.020s delta_norm=189.945752 cpu=32.0 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:09] [Hospital:h2] forwarded summary local_round=12 resp={"status":"ok"}
+[17:04:11] [Hospital:h2] round=13 batch=2 train_time=0.020s delta_norm=188.285229 cpu=48.1 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:11] [Hospital:h2] forwarded summary local_round=13 resp={"status":"ok"}
+[17:04:11] [DDoS:h2] ALERT -> dominant=10.0.2.1 shares={'10.0.2.11': 0.127, '10.0.2.1': 0.5, '10.0.2.254': 0.246, '10.0.2.12': 0.085, '10.0.2.13': 0.042}
+[17:04:13] [Hospital:h2] round=14 batch=2 train_time=0.022s delta_norm=200.952901 cpu=35.4 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:13] [Hospital:h2] forwarded summary local_round=14 resp={"status":"ok"}
+[17:04:14] [Hospital:h2] round=15 batch=1 train_time=0.011s delta_norm=194.760455 cpu=40.9 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:14] [Hospital:h2] forwarded summary local_round=15 resp={"status":"ok"}
+[17:04:15] [Hospital:h2] round=16 batch=1 train_time=0.010s delta_norm=188.438424 cpu=39.4 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:15] [Hospital:h2] forwarded summary local_round=16 resp={"status":"ok"}
+[17:04:16] [DDoS:h2] ALERT -> dominant=10.0.2.1 shares={'10.0.2.1': 0.5, '10.0.2.254': 0.265, '10.0.2.13': 0.059, '10.0.2.11': 0.118, '10.0.2.12': 0.059}
+[17:04:17] [Hospital:h2] round=17 batch=3 train_time=0.030s delta_norm=198.419492 cpu=37.9 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:17] [Hospital:h2] forwarded summary local_round=17 resp={"status":"ok"}
+[17:04:19] [Hospital:h2] round=18 batch=1 train_time=0.012s delta_norm=195.607669 cpu=49.9 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:19] [Hospital:h2] forwarded summary local_round=18 resp={"status":"ok"}
+[17:04:20] [Hospital:h2] round=19 batch=1 train_time=0.010s delta_norm=189.659460 cpu=65.3 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:20] [Hospital:h2] forwarded summary local_round=19 resp={"status":"ok"}
+[17:04:21] [Hospital:h2] round=20 batch=2 train_time=0.023s delta_norm=188.512493 cpu=50.2 rx_drop=0 tx_drop=0 tcp_retrans=0
+[17:04:21] [Hospital:h2] forwarded summary local_round=20 resp={"status":"ok"}
+[17:04:21] [DDoS:h2] ALERT -> dominant=10.0.2.1 shares={'10.0.2.13': 0.084, '10.0.2.1': 0.503, '10.0.2.254': 0.203, '10.0.2.12': 0.084, '10.0.2.11': 0.126}

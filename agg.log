@@ -1,0 +1,67 @@
+[17:03:50] [Aggregator] listening on 9000 expected_clients=3 round_timeout=5.0s csv=rounds_summary.csv
+[17:03:52] [Aggregator] summary received from 10.0.1.1 for round_snapshot=1 local_round=1 delta_norm=187.091643
+[17:03:52] [Aggregator] summary received from 10.0.2.1 for round_snapshot=1 local_round=1 delta_norm=195.386839
+[17:03:54] [Aggregator] summary received from 10.0.1.1 for round_snapshot=1 local_round=2 delta_norm=215.156981
+[17:03:54] [Aggregator] expected clients reached, closing round early.
+[17:03:54] [Aggregator] closed round=1 recv=3/3 round_time=3.676s avg_train=0.023967 avg_delta=199.211821 avg_staleness=0
+[17:03:54] [Aggregator] summary received from 10.0.2.1 for round_snapshot=2 local_round=2 delta_norm=193.491303
+[17:03:55] [Aggregator] summary received from 10.0.1.1 for round_snapshot=2 local_round=3 delta_norm=201.4453
+[17:03:55] [Aggregator] summary received from 10.0.2.1 for round_snapshot=2 local_round=3 delta_norm=195.176356
+[17:03:55] [Aggregator] expected clients reached, closing round early.
+[17:03:55] [Aggregator] closed round=2 recv=3/3 round_time=1.326s avg_train=0.010167 avg_delta=196.70432 avg_staleness=0
+[17:03:56] [Aggregator] summary received from 10.0.1.1 for round_snapshot=3 local_round=4 delta_norm=198.414131
+[17:03:56] [Aggregator] summary received from 10.0.2.1 for round_snapshot=3 local_round=4 delta_norm=195.22411
+[17:03:58] [Aggregator] summary received from 10.0.1.1 for round_snapshot=3 local_round=5 delta_norm=188.843907
+[17:03:58] [Aggregator] expected clients reached, closing round early.
+[17:03:58] [Aggregator] closed round=3 recv=3/3 round_time=2.752s avg_train=0.020233 avg_delta=194.160716 avg_staleness=0
+[17:03:59] [Aggregator] summary received from 10.0.2.1 for round_snapshot=4 local_round=5 delta_norm=198.22429
+[17:04:00] [Aggregator] summary received from 10.0.1.1 for round_snapshot=4 local_round=6 delta_norm=190.98645
+[17:04:01] [Aggregator] summary received from 10.0.2.1 for round_snapshot=4 local_round=6 delta_norm=192.944709
+[17:04:01] [Aggregator] expected clients reached, closing round early.
+[17:04:01] [Aggregator] closed round=4 recv=3/3 round_time=2.350s avg_train=0.020267 avg_delta=194.051816 avg_staleness=0
+[17:04:01] [Aggregator] summary received from 10.0.1.1 for round_snapshot=5 local_round=7 delta_norm=208.150998
+[17:04:02] [Aggregator] summary received from 10.0.2.1 for round_snapshot=5 local_round=7 delta_norm=183.584265
+[17:04:02] [Aggregator] summary received from 10.0.1.1 for round_snapshot=5 local_round=8 delta_norm=187.082415
+[17:04:02] [Aggregator] expected clients reached, closing round early.
+[17:04:02] [Aggregator] closed round=5 recv=3/3 round_time=1.715s avg_train=0.010333 avg_delta=192.939226 avg_staleness=0
+[17:04:03] [Aggregator] summary received from 10.0.2.1 for round_snapshot=6 local_round=8 delta_norm=190.525595
+[17:04:04] [Aggregator] summary received from 10.0.1.1 for round_snapshot=6 local_round=9 delta_norm=202.309862
+[17:04:05] [Aggregator] summary received from 10.0.2.1 for round_snapshot=6 local_round=9 delta_norm=193.887392
+[17:04:05] [Aggregator] expected clients reached, closing round early.
+[17:04:05] [Aggregator] closed round=6 recv=3/3 round_time=2.368s avg_train=0.023667 avg_delta=195.574283 avg_staleness=0
+[17:04:06] [Aggregator] summary received from 10.0.1.1 for round_snapshot=7 local_round=10 delta_norm=200.336354
+[17:04:07] [Aggregator] summary received from 10.0.2.1 for round_snapshot=7 local_round=10 delta_norm=194.154964
+[17:04:07] [Aggregator] summary received from 10.0.1.1 for round_snapshot=7 local_round=11 delta_norm=199.555061
+[17:04:07] [Aggregator] expected clients reached, closing round early.
+[17:04:07] [Aggregator] closed round=7 recv=3/3 round_time=2.727s avg_train=0.0114 avg_delta=198.01546 avg_staleness=0
+[17:04:08] [Aggregator] summary received from 10.0.2.1 for round_snapshot=8 local_round=11 delta_norm=192.99472
+[17:04:08] [Aggregator] summary received from 10.0.1.1 for round_snapshot=8 local_round=12 delta_norm=190.70365
+[17:04:09] [Aggregator] summary received from 10.0.2.1 for round_snapshot=8 local_round=12 delta_norm=189.945752
+[17:04:09] [Aggregator] expected clients reached, closing round early.
+[17:04:09] [Aggregator] closed round=8 recv=3/3 round_time=1.372s avg_train=0.017133 avg_delta=191.214707 avg_staleness=0
+[17:04:10] [Aggregator] summary received from 10.0.1.1 for round_snapshot=9 local_round=13 delta_norm=194.098717
+[17:04:11] [Aggregator] summary received from 10.0.2.1 for round_snapshot=9 local_round=13 delta_norm=188.285229
+[17:04:12] [Aggregator] summary received from 10.0.1.1 for round_snapshot=9 local_round=14 delta_norm=197.590875
+[17:04:12] [Aggregator] expected clients reached, closing round early.
+[17:04:12] [Aggregator] closed round=9 recv=3/3 round_time=3.712s avg_train=0.020333 avg_delta=193.32494 avg_staleness=0
+[17:04:13] [Aggregator] summary received from 10.0.2.1 for round_snapshot=10 local_round=14 delta_norm=200.952901
+[17:04:13] [Aggregator] summary received from 10.0.1.1 for round_snapshot=10 local_round=15 delta_norm=194.582302
+[17:04:14] [Aggregator] summary received from 10.0.2.1 for round_snapshot=10 local_round=15 delta_norm=194.760455
+[17:04:14] [Aggregator] expected clients reached, closing round early.
+[17:04:14] [Aggregator] closed round=10 recv=3/3 round_time=1.403s avg_train=0.0142 avg_delta=196.765219 avg_staleness=0
+[17:04:14] [Aggregator] summary received from 10.0.1.1 for round_snapshot=11 local_round=16 delta_norm=194.060074
+[17:04:15] [Aggregator] summary received from 10.0.2.1 for round_snapshot=11 local_round=16 delta_norm=188.438424
+[17:04:17] [Aggregator] summary received from 10.0.1.1 for round_snapshot=11 local_round=17 delta_norm=194.058494
+[17:04:17] [Aggregator] expected clients reached, closing round early.
+[17:04:17] [Aggregator] closed round=11 recv=3/3 round_time=2.681s avg_train=0.016967 avg_delta=192.185664 avg_staleness=0
+[17:04:17] [Aggregator] summary received from 10.0.2.1 for round_snapshot=12 local_round=17 delta_norm=198.419492
+[17:04:19] [Aggregator] summary received from 10.0.1.1 for round_snapshot=12 local_round=18 delta_norm=186.673855
+[17:04:19] [Aggregator] summary received from 10.0.2.1 for round_snapshot=12 local_round=18 delta_norm=195.607669
+[17:04:19] [Aggregator] expected clients reached, closing round early.
+[17:04:19] [Aggregator] closed round=12 recv=3/3 round_time=2.415s avg_train=0.0175 avg_delta=193.567005 avg_staleness=0
+[17:04:20] [Aggregator] summary received from 10.0.1.1 for round_snapshot=13 local_round=19 delta_norm=204.843093
+[17:04:20] [Aggregator] summary received from 10.0.2.1 for round_snapshot=13 local_round=19 delta_norm=189.65946
+[17:04:21] [Aggregator] summary received from 10.0.1.1 for round_snapshot=13 local_round=20 delta_norm=182.50259
+[17:04:21] [Aggregator] expected clients reached, closing round early.
+[17:04:21] [Aggregator] closed round=13 recv=3/3 round_time=1.655s avg_train=0.0139 avg_delta=192.335048 avg_staleness=0
+[17:04:21] [Aggregator] summary received from 10.0.2.1 for round_snapshot=14 local_round=20 delta_norm=188.512493

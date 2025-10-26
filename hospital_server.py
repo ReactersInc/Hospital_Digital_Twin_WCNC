@@ -6,6 +6,8 @@ hospital_server.py
 - Runs embedded DDoSMonitor (pyshark) on specified interface (--iface).
 - Prints live capture lines (per-packet) when debug=True.
 - Writes per-window metrics to ddos_metrics_<name>.csv and alerts to ddos_alerts_<name>.csv.
+- Includes per-IP packet share in metrics and alerts.
+- Computes normalized entropy and per-packet jitter.
 """
 
 import argparse
@@ -25,16 +27,12 @@ import http.server
 import socketserver
 import re
 
-
 from ddos_monitor_pyshark import DDoSMonitor
-
-
 
 # ---------------- Hospital Server ---------------- #
 
 def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
-
 
 class HospitalHandler(http.server.BaseHTTPRequestHandler):
     server_version = "HospitalHTTP/0.1"
@@ -68,7 +66,6 @@ class HospitalHandler(http.server.BaseHTTPRequestHandler):
 
     def log_message(self, format, *args):
         return
-
 
 class HospitalServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
@@ -122,14 +119,12 @@ class HospitalServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
             metrics["cpu_percent"] = psutil.cpu_percent(interval=None)
         except Exception:
             metrics["cpu_percent"] = 0.0
-        # best-effort parse /proc/net/dev for an interface line
         try:
             with open("/proc/net/dev", "r") as f:
                 lines = f.readlines()
             for line in lines[2:]:
                 if "lo" in line:
                     continue
-                # choose first non-loopback (best-effort)
                 parts = re.split(r"[:\s]+", line.strip())
                 if len(parts) >= 13:
                     try:
@@ -142,7 +137,6 @@ class HospitalServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
                     break
         except Exception:
             pass
-
         try:
             with open("/proc/net/snmp", "r") as f:
                 lines = f.readlines()
@@ -159,7 +153,6 @@ class HospitalServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
                 metrics["tcp_retrans_segs"] = tcp_dict.get("RetransSegs", 0)
         except Exception:
             pass
-
         return metrics
 
     def _maybe_process(self):
@@ -197,7 +190,6 @@ class HospitalServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         local_round = self.local_round
         host_metrics = self._collect_host_metrics()
 
-        # write batch CSV
         with open(self.csv_file, "a", newline="") as f:
             writer = csv.writer(f)
             row = [
@@ -222,7 +214,6 @@ class HospitalServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
             f"tx_drop={host_metrics.get('tx_drop',0)} tcp_retrans={host_metrics.get('tcp_retrans_segs',0)}"
         )
 
-        # forward summary to aggregator (best-effort)
         self._forward_summary(
             {
                 "timestamp": time.time(),
@@ -245,99 +236,77 @@ class HospitalServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
                 resp_body = resp.read().decode()
                 log(f"[Hospital:{self.hospital_name}] forwarded summary local_round={summary['local_round']} resp={resp_body}")
         except Exception as e:
-            # aggregator may not be reachable — ignore
             log(f"[Hospital:{self.hospital_name}] forward ERR: {e}")
 
 # ---------------- Runner ---------------- #
-
 
 def run_server(port, batch, agg_host, agg_port, csv_file, iface, hospital_name, debug):
     forward_url = f"http://{agg_host}:{agg_port}/summary"
     server = HospitalServer(("0.0.0.0", port), HospitalHandler, batch, forward_url, csv_file, hospital_name)
 
-    # DDoS metrics CSV (every window)
     ddos_metrics_csv = f"ddos_metrics_{hospital_name}.csv"
-    if not os.path.isfile(ddos_metrics_csv):
-        with open(ddos_metrics_csv, "w", newline="") as f:
-            w = csv.writer(f)
-            w.writerow(
-                [
-                    "timestamp",
-                    "interface",
-                    "packet_count",
-                    "pps",
-                    "bandwidth_mbps",
-                    "jitter_ms",
-                    "entropy",
-                    "dominant_src",
-                    "dominant_share",
-                ]
-            )
-
-    # DDoS alerts CSV
     ddos_alerts_csv = f"ddos_alerts_{hospital_name}.csv"
-    if not os.path.isfile(ddos_alerts_csv):
-        with open(ddos_alerts_csv, "w", newline="") as f:
-            w = csv.writer(f)
-            w.writerow(
-                [
-                    "detected_at",
-                    "interface",
-                    "packet_count",
-                    "pps",
-                    "bandwidth_mbps",
-                    "jitter_ms",
-                    "entropy",
-                    "dominant_src",
-                    "dominant_share",
-                    "reason",
-                ]
-            )
 
-    # on_window callback: always called each window with metrics
+    for csv_path, headers in [
+        (ddos_metrics_csv, ["timestamp","interface","packet_count","pps","bandwidth_mbps","jitter_ms","entropy","ip_shares"]),
+        (ddos_alerts_csv, ["detected_at","interface","packet_count","pps","bandwidth_mbps","jitter_ms","entropy","dominant_src","dominant_share","ip_shares","reason"])
+    ]:
+        if not os.path.isfile(csv_path):
+            with open(csv_path, "w", newline="") as f:
+                w = csv.writer(f)
+                w.writerow(headers)
+
+    # on_window callback: logs per-IP shares, normalized entropy, jitter
     def on_window(metrics):
-        # write metrics row (append)
+        # Prefer ip_shares provided by monitor; otherwise compute from ip_stats
+        ip_shares = metrics.get("ip_shares")
+        if not ip_shares:
+            ip_stats = metrics.get("ip_stats", {}) or {}
+            total_packets = sum(stats.get("packet_count", 0) for stats in ip_stats.values())
+            ip_shares = {ip: round(stats.get("packet_count", 0)/total_packets, 3) for ip, stats in ip_stats.items()} if total_packets else {}
+
         try:
             with open(ddos_metrics_csv, "a", newline="") as f:
                 w = csv.writer(f)
-                w.writerow(
-                    [
-                        metrics.get("timestamp", time.time()),
-                        metrics.get("interface"),
-                        metrics.get("packet_count"),
-                        metrics.get("pps"),
-                        metrics.get("bandwidth_mbps"),
-                        metrics.get("jitter_ms"),
-                        metrics.get("entropy"),
-                        metrics.get("dominant_src"),
-                        metrics.get("dominant_share"),
-                    ]
-                )
+                w.writerow([
+                    metrics.get("timestamp", time.time()),
+                    metrics.get("interface"),
+                    metrics.get("packet_count"),
+                    metrics.get("pps"),
+                    metrics.get("bandwidth_mbps"),
+                    round(metrics.get("jitter_ms", 0.0),3),
+                    round(metrics.get("entropy",0.0),3),
+                    json.dumps(ip_shares)
+                ])
         except Exception as e:
             log(f"[DDoS:{hospital_name}] failed to write metrics csv: {e}")
 
-    # on_alert callback: called only when suspicious
+    # on_alert callback: logs per-IP shares, dominant IP, entropy, reason
     def on_alert(alert):
-        log(
-            f"[DDoS:{hospital_name}] ALERT -> {alert.get('dominant_src')} bw={alert.get('bandwidth_mbps')}Mbps pps={alert.get('pps')} entropy={alert.get('entropy')}"
-        )
+        ip_shares = alert.get("ip_shares")
+        if not ip_shares:
+            ip_stats = alert.get("ip_stats", {}) or {}
+            total_packets = sum(stats.get("packet_count", 0) for stats in ip_stats.values())
+            ip_shares = {ip: round(stats.get("packet_count", 0)/total_packets, 3) for ip, stats in ip_stats.items()} if total_packets else {}
+
+        log(f"[DDoS:{hospital_name}] ALERT -> dominant={alert.get('dominant_src')} shares={ip_shares}")
+
         try:
             with open(ddos_alerts_csv, "a", newline="") as f:
                 w = csv.writer(f)
-                w.writerow(
-                    [
-                        alert.get("detected_at", time.time()),
-                        alert.get("interface"),
-                        alert.get("packet_count"),
-                        alert.get("pps"),
-                        alert.get("bandwidth_mbps"),
-                        alert.get("jitter_ms"),
-                        alert.get("entropy"),
-                        alert.get("dominant_src"),
-                        alert.get("dominant_share"),
-                        json.dumps(alert.get("reason", {})),
-                    ]
-                )
+                w.writerow([
+                    alert.get("detected_at", time.time()),
+                    alert.get("interface"),
+                    alert.get("packet_count"),
+                    alert.get("pps"),
+                    alert.get("bandwidth_mbps"),
+                    round(alert.get("jitter_ms",0.0),3),
+                    round(alert.get("entropy",0.0),3),
+                    alert.get("dominant_src"),
+                    alert.get("dominant_share"),
+                    json.dumps(ip_shares),
+                    json.dumps(alert.get("reason", {}))
+                ])
         except Exception as e:
             log(f"[DDoS:{hospital_name}] failed to write alerts csv: {e}")
 
@@ -348,7 +317,6 @@ def run_server(port, batch, agg_host, agg_port, csv_file, iface, hospital_name, 
         entropy_threshold=1.0,
         dominance_share_threshold=0.6,
         bandwidth_threshold_mbps=80.0,
-        jitter_threshold_ms=20.0,
         pps_threshold=1000.0,
         alert_url=f"http://{agg_host}:{agg_port}/ddos_alert",
         on_alert=on_alert,
@@ -371,6 +339,7 @@ def run_server(port, batch, agg_host, agg_port, csv_file, iface, hospital_name, 
         log("Hospital shutting down")
         ddos_monitor.stop()
 
+# ---------------- Main ---------------- #
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hospital server with integrated DDoS monitor")
@@ -379,7 +348,7 @@ if __name__ == "__main__":
     parser.add_argument("--agg_port", type=int, default=9000)
     parser.add_argument("--batch", type=int, default=10)
     parser.add_argument("--csv_file", type=str, default="hospital_metrics.csv")
-    parser.add_argument("--iface", type=str, default="eth0", help="interface for pyshark (e.g., h1-eth0 in Mininet)")
+    parser.add_argument("--iface", type=str, default="eth0", help="interface for pyshark")
     parser.add_argument("--name", type=str, default="hospital", help="hospital name used for logs/csv")
     parser.add_argument("--debug", action="store_true", help="enable verbose pyshark + monitor logging")
     args = parser.parse_args()

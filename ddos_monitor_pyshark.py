@@ -2,7 +2,7 @@
 """
 Lightweight DDoS detector using pyshark packet capture.
 
-Detects likely attacker IPs using Shannon entropy, bandwidth, per-IP jitter, and PPS.
+Detects likely attacker IPs using Shannon entropy (normalized), bandwidth, per-IP jitter, and PPS.
 Tracks per-IP metrics (including smoothed jitter).
 Sends alert to an aggregator endpoint (HTTP POST) when sources are flagged.
 """
@@ -57,6 +57,9 @@ class DDoSMonitor:
         self._capture_thread = None
         self._agg_thread = None
         self._prev_global_jitter = 0.0
+
+        # store previous smoothed per-ip jitter across windows
+        self._prev_ip_jitter = {}
 
     # -------------------------------
     @staticmethod
@@ -149,6 +152,8 @@ class DDoSMonitor:
                         "dominant_src": None,
                         "dominant_share": 0.0,
                         "ip_stats": {},
+                        "ip_counts": {},
+                        "ip_shares": {},
                     }
                     try:
                         self.on_window(window_metrics)
@@ -164,26 +169,36 @@ class DDoSMonitor:
             counts = Counter(p["src"] for p in pkts if p["src"])
 
             # --- compute per-IP metrics ---
-            self.ip_stats.clear()
+            ip_stats_local = {}
+            ip_counts = {}
             for ip, cnt in counts.items():
                 ip_times = [p["ts"] for p in pkts if p["src"] == ip]
                 ip_bytes = sum(p["length"] for p in pkts if p["src"] == ip)
                 ip_pps = cnt / duration
                 ip_bw_mbps = ip_bytes * 8 / duration / 1e6
 
-                prev_ip_jitter = self.ip_stats.get(ip, {}).get("jitter_ms", 0.0)
+                prev_ip_jitter = self._prev_ip_jitter.get(ip, 0.0)
                 ip_jitter_ms = self.compute_jitter(ip_times, prev_smoothed=prev_ip_jitter, alpha=0.3)
 
-                self.ip_stats[ip] = {
+                # store smoothed jitter for next window
+                self._prev_ip_jitter[ip] = ip_jitter_ms
+
+                ip_stats_local[ip] = {
                     "pps": round(ip_pps, 2),
                     "bandwidth_mbps": round(ip_bw_mbps, 2),
                     "packet_count": cnt,
                     "jitter_ms": round(ip_jitter_ms, 3),
                 }
+                ip_counts[ip] = cnt
 
-            # --- compute global entropy and dominant src ---
+            self.ip_stats = ip_stats_local
+
+            # --- compute global normalized entropy and dominant src ---
             srcs = [ip for ip, cnt in counts.items() for _ in range(cnt)]
-            entropy = float(self.shannon_entropy(srcs)) if srcs else 0.0
+            entropy_raw = float(self.shannon_entropy(srcs)) if srcs else 0.0
+            unique_ips = len(counts)
+            entropy_norm = entropy_raw / math.log2(unique_ips) if unique_ips > 1 else 0.0
+
             dominant_src, dominant_count = counts.most_common(1)[0] if counts else (None, 0)
             dominant_share = dominant_count / pkt_count if pkt_count else 0.0
 
@@ -195,6 +210,10 @@ class DDoSMonitor:
             jitter_ms = 0.3 * raw_global_jitter + 0.7 * self._prev_global_jitter
             self._prev_global_jitter = jitter_ms
 
+            # --- prepare ip_shares ---
+            total_packets = sum(ip_counts.values()) if ip_counts else 0
+            ip_shares = {ip: round(cnt / total_packets, 3) for ip, cnt in ip_counts.items()} if total_packets else {}
+
             # --- assemble metrics for current window ---
             window_metrics = {
                 "timestamp": now,
@@ -203,10 +222,12 @@ class DDoSMonitor:
                 "pps": round(pps, 3),
                 "bandwidth_mbps": round(bandwidth_mbps, 6),
                 "jitter_ms": round(jitter_ms, 6),
-                "entropy": round(entropy, 6),
+                "entropy": round(entropy_norm, 6),  # <--- normalized entropy
                 "dominant_src": dominant_src,
                 "dominant_share": round(dominant_share, 6),
                 "ip_stats": self.ip_stats.copy(),
+                "ip_counts": ip_counts,
+                "ip_shares": ip_shares,
             }
 
             # --- callback for per-window data ---
@@ -220,14 +241,14 @@ class DDoSMonitor:
                 print(
                     f"[ddos_monitor:{self.interface}] pkts={pkt_count} pps={pps:.1f} "
                     f"bw={bandwidth_mbps:.2f}Mbps jitter={jitter_ms:.2f}ms "
-                    f"entropy={entropy:.3f} dom_src={dominant_src}({dominant_share*100:.1f}%)",
+                    f"entropy={entropy_norm:.3f} dom_src={dominant_src}({dominant_share*100:.1f}%)",
                     flush=True,
                 )
 
             # --- detect suspicious IPs ---
             suspicious_ips = []
             for ip, stats in self.ip_stats.items():
-                ip_share = counts[ip] / pkt_count
+                ip_share = (counts[ip] / pkt_count) if pkt_count else 0.0
                 ip_pps = stats["pps"]
                 ip_bw_mbps = stats["bandwidth_mbps"]
                 ip_jitter_ms = stats["jitter_ms"]
@@ -248,7 +269,7 @@ class DDoSMonitor:
                         }
                     )
 
-            low_entropy = entropy < self.entropy_threshold
+            low_entropy = entropy_norm < self.entropy_threshold
             high_pps = pps >= self.pps_threshold
             high_bw = bandwidth_mbps >= self.bandwidth_threshold_mbps
             high_jitter = jitter_ms >= self.jitter_threshold_ms

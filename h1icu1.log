@@ -1,0 +1,16 @@
+[17:03:52] [ICU h1icu1] sending to http://10.0.1.1:8001/ingest every 2.0s
+[17:03:52] [ICU h1icu1] seq=0 sent_success=1 loss_rate=0.000 jitter=0.0ms retrans_delta=0 rtt=71.695ms
+[17:03:54] [ICU h1icu1] seq=1 sent_success=1 loss_rate=0.000 jitter=1.777ms retrans_delta=0 rtt=43.271ms
+[17:03:56] [ICU h1icu1] seq=2 sent_success=1 loss_rate=0.000 jitter=1.801ms retrans_delta=0 rtt=45.438ms
+[17:03:58] [ICU h1icu1] seq=3 sent_success=1 loss_rate=0.000 jitter=1.782ms retrans_delta=0 rtt=43.945ms
+[17:04:00] [ICU h1icu1] seq=4 sent_success=1 loss_rate=0.000 jitter=1.675ms retrans_delta=0 rtt=43.866ms
+[17:04:02] [ICU h1icu1] seq=5 sent_success=1 loss_rate=0.000 jitter=1.635ms retrans_delta=0 rtt=42.829ms
+[17:04:04] [ICU h1icu1] seq=6 sent_success=1 loss_rate=0.000 jitter=1.773ms retrans_delta=0 rtt=46.664ms
+[17:04:06] [ICU h1icu1] seq=7 sent_success=1 loss_rate=0.000 jitter=1.846ms retrans_delta=0 rtt=43.726ms
+[17:04:08] [ICU h1icu1] seq=8 sent_success=1 loss_rate=0.000 jitter=1.765ms retrans_delta=0 rtt=44.277ms
+[17:04:10] [ICU h1icu1] seq=9 sent_success=1 loss_rate=0.000 jitter=1.791ms retrans_delta=0 rtt=42.096ms
+[17:04:12] [ICU h1icu1] seq=10 sent_success=1 loss_rate=0.000 jitter=1.709ms retrans_delta=0 rtt=41.62ms
+[17:04:14] [ICU h1icu1] seq=11 sent_success=1 loss_rate=0.000 jitter=1.793ms retrans_delta=0 rtt=44.671ms
+[17:04:16] [ICU h1icu1] seq=12 sent_success=1 loss_rate=0.000 jitter=1.779ms retrans_delta=0 rtt=43.09ms
+[17:04:18] [ICU h1icu1] seq=13 sent_success=1 loss_rate=0.000 jitter=1.7ms retrans_delta=0 rtt=43.6ms
+[17:04:20] [ICU h1icu1] seq=14 sent_success=1 loss_rate=0.000 jitter=1.681ms retrans_delta=0 rtt=42.205ms

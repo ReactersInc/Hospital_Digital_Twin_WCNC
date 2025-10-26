@@ -1,0 +1,9 @@
+[17:03:52] [ICU h1icu3] sending to http://10.0.1.1:8001/ingest every 4.0s
+[17:03:52] [ICU h1icu3] seq=0 sent_success=1 loss_rate=0.000 jitter=0.0ms retrans_delta=0 rtt=63.932ms
+[17:03:56] [ICU h1icu3] seq=1 sent_success=1 loss_rate=0.000 jitter=1.352ms retrans_delta=0 rtt=42.295ms
+[17:04:00] [ICU h1icu3] seq=2 sent_success=1 loss_rate=0.000 jitter=1.288ms retrans_delta=0 rtt=42.616ms
+[17:04:04] [ICU h1icu3] seq=3 sent_success=1 loss_rate=0.000 jitter=1.332ms retrans_delta=0 rtt=44.603ms
+[17:04:08] [ICU h1icu3] seq=4 sent_success=1 loss_rate=0.000 jitter=1.4ms retrans_delta=0 rtt=47.023ms
+[17:04:12] [ICU h1icu3] seq=5 sent_success=1 loss_rate=0.000 jitter=1.636ms retrans_delta=0 rtt=41.833ms
+[17:04:16] [ICU h1icu3] seq=6 sent_success=1 loss_rate=0.000 jitter=1.566ms retrans_delta=0 rtt=42.341ms
+[17:04:20] [ICU h1icu3] seq=7 sent_success=1 loss_rate=0.000 jitter=1.482ms retrans_delta=0 rtt=42.112ms
